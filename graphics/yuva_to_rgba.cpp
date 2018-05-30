@@ -246,6 +246,163 @@ void convertYUVA420ToRGBA(byte *dstPtr, int dstPitch, const YUVAToRGBALookup *lo
 	}
 }
 
+template<typename PixelInt>
+void convertYUVA420ToRGBAf(byte *dstPtr, int dstPitch, const YUVAToRGBALookup *lookup, int16 *colorTab, const byte *ySrc, const byte *uSrc, const byte *vSrc, const byte *aSrc, int yWidth, int yHeight, int yPitch, int uvPitch) {
+	int halfHeight = yHeight >> 1;
+	int halfWidth = yWidth >> 1;
+
+	// Keep the tables in pointers here to avoid a dereference on each pixel
+	const int16 *Cr_r_tab = colorTab;
+	const int16 *Cr_g_tab = Cr_r_tab + 256;
+	const int16 *Cb_g_tab = Cr_g_tab + 256;
+	const int16 *Cb_b_tab = Cb_g_tab + 256;
+	const uint32 *rgbToPix = lookup->getRGBToPix();
+	const uint32 *aToPix = lookup->getAlphaToPix();
+	//register const uint32 *L;
+	std::size_t pixelSize = sizeof(PixelInt);
+	PixelInt *destP = (PixelInt *)dstPtr;
+	const int16 pixelShift = dstPitch / pixelSize;
+	byte temp;
+
+	int16 cr_r;
+	int16 crb_g;
+	int16 cb_b;
+
+	for (int h = 0; h < halfHeight; h++) {
+		if (h%4 == 0) //{
+		for (int w = 0; w < halfWidth; w+=2) {
+	
+			cr_r  = Cr_r_tab[*vSrc];
+			crb_g = Cr_g_tab[*vSrc] + Cb_g_tab[*uSrc];
+			cb_b  = Cb_b_tab[*uSrc];
+			uSrc++;
+			vSrc++;
+
+			//PUT_PIXELA(*ySrc, *aSrc, dstPtr);
+			temp = *ySrc;
+			*(destP) = (rgbToPix[temp+cr_r] | rgbToPix[temp+crb_g] | rgbToPix[temp+cb_b] | aToPix[*aSrc]);
+			*(destP+1) = *(destP);
+			*(destP+2) = *(destP);
+			*(destP+3) = *(destP);
+			//PUT_PIXELA(*(ySrc + yPitch), *(aSrc + yPitch), dstPtr + dstPitch);
+			temp = *(ySrc + yPitch);
+			*(destP + pixelShift) = (rgbToPix[temp+cr_r] | rgbToPix[temp+crb_g] | rgbToPix[temp+cb_b] | aToPix[*(aSrc + yPitch)]); 
+			*(destP+1+ pixelShift) = *(destP + pixelShift);
+			*(destP+2+ pixelShift) = *(destP + pixelShift);
+			*(destP+3+ pixelShift) = *(destP + pixelShift);
+			ySrc+=4;
+			aSrc+=4;
+			destP+=4;
+
+			uSrc++;
+			vSrc++;
+
+		}
+		
+		else if (h%4 == 1) 
+{
+			for (int w = 0; w < halfWidth; w+=2) {
+
+			cr_r  = Cr_r_tab[*vSrc];
+			crb_g = Cr_g_tab[*vSrc] + Cb_g_tab[*uSrc];
+			cb_b  = Cb_b_tab[*uSrc];
+
+			uSrc++;
+			vSrc++;
+			//PUT_PIXELA(*ySrc, *aSrc, dstPtr);
+			temp = *ySrc;
+			*(destP+1) = (rgbToPix[temp+cr_r] | rgbToPix[temp+crb_g] | rgbToPix[temp+cb_b] | aToPix[*aSrc]);
+			// *(destP+1) = *(destP);
+			*(destP) = *(destP+1);
+			*(destP+2) = *(destP+1);
+			*(destP+3) = *(destP+1);
+			//PUT_PIXELA(*(ySrc + yPitch), *(aSrc + yPitch), dstPtr + dstPitch);
+			temp = *(ySrc + yPitch);
+			*(destP +1 +pixelShift) = (rgbToPix[temp+cr_r] | rgbToPix[temp+crb_g] | rgbToPix[temp+cb_b] | aToPix[*(aSrc + yPitch)]); 
+			*(destP+ pixelShift) = *(destP +1+ pixelShift);
+			*(destP+ 2+pixelShift) = *(destP +1+ pixelShift);
+			*(destP+ 3+pixelShift) = *(destP +1+ pixelShift);
+
+			ySrc+=4;
+			aSrc+=4;
+			destP+=4;
+
+			uSrc++;
+			vSrc++;
+			}
+		}
+		else if (h%4 == 2) 
+{
+			for (int w = 0; w < halfWidth; w+=2) {
+			uSrc++;
+			vSrc++;
+			cr_r  = Cr_r_tab[*vSrc];
+			crb_g = Cr_g_tab[*vSrc] + Cb_g_tab[*uSrc];
+			cb_b  = Cb_b_tab[*uSrc];
+			uSrc++;
+			vSrc++;
+
+			//PUT_PIXELA(*ySrc, *aSrc, dstPtr);
+			temp = *ySrc;
+			*(destP+2) = (rgbToPix[temp+cr_r] | rgbToPix[temp+crb_g] | rgbToPix[temp+cb_b] | aToPix[*aSrc]);
+			// *(destP+1) = *(destP);
+			*(destP) = *(destP+2);
+			*(destP+1) = *(destP+2);
+			*(destP+3) = *(destP+2);
+			//PUT_PIXELA(*(ySrc + yPitch), *(aSrc + yPitch), dstPtr + dstPitch);
+			temp = *(ySrc + yPitch);
+			*(destP +2 +pixelShift) = (rgbToPix[temp+cr_r] | rgbToPix[temp+crb_g] | rgbToPix[temp+cb_b] | aToPix[*(aSrc + yPitch)]); 
+			*(destP+ pixelShift) = *(destP +2+ pixelShift);
+			*(destP+ 1+pixelShift) = *(destP +2+ pixelShift);
+			*(destP+ 3+pixelShift) = *(destP +2+ pixelShift);
+
+			ySrc+=4;
+			aSrc+=4;
+			destP+=4;
+
+			}
+		}
+		else
+{
+			for (int w = 0; w < halfWidth; w+=2) {
+			uSrc++;
+			vSrc++;
+			cr_r  = Cr_r_tab[*vSrc];
+			crb_g = Cr_g_tab[*vSrc] + Cb_g_tab[*uSrc];
+			cb_b  = Cb_b_tab[*uSrc];
+
+			uSrc++;
+			vSrc++;
+			//PUT_PIXELA(*ySrc, *aSrc, dstPtr);
+			temp = *ySrc;
+			*(destP+3) = (rgbToPix[temp+cr_r] | rgbToPix[temp+crb_g] | rgbToPix[temp+cb_b] | aToPix[*aSrc]);
+			// *(destP+1) = *(destP);
+			*(destP) = *(destP+3);
+			*(destP+2) = *(destP+3);
+			*(destP+1) = *(destP+3);
+			//PUT_PIXELA(*(ySrc + yPitch), *(aSrc + yPitch), dstPtr + dstPitch);
+			temp = *(ySrc + yPitch);
+			*(destP +3 +pixelShift) = (rgbToPix[temp+cr_r] | rgbToPix[temp+crb_g] | rgbToPix[temp+cb_b] | aToPix[*(aSrc + yPitch)]); 
+			*(destP+ pixelShift) = *(destP +3+ pixelShift);
+			*(destP+ 2+pixelShift) = *(destP +3+ pixelShift);
+			*(destP+ 1+pixelShift) = *(destP +3+ pixelShift);
+
+			ySrc+=4;
+			aSrc+=4;
+			destP+=4;
+
+			}
+		}
+		//dstPtr += dstPitch;
+
+		destP += pixelShift;
+		ySrc += (yPitch << 1) - yWidth;
+		aSrc += (yPitch << 1) - yWidth;
+		uSrc += uvPitch - halfWidth;
+		vSrc += uvPitch - halfWidth;
+	}
+}
+
 void YUVAToRGBAManager::convert420(Graphics::Surface *dst, YUVAToRGBAManager::LuminanceScale scale, const byte *ySrc, const byte *uSrc, const byte *vSrc, const byte *aSrc, int yWidth, int yHeight, int yPitch, int uvPitch) {
 	// Sanity checks
 	assert(dst && dst->getPixels());
@@ -261,6 +418,23 @@ void YUVAToRGBAManager::convert420(Graphics::Surface *dst, YUVAToRGBAManager::Lu
 		convertYUVA420ToRGBA<uint16>((byte *)dst->getPixels(), dst->pitch, lookup, _colorTab, ySrc, uSrc, vSrc, aSrc, yWidth, yHeight, yPitch, uvPitch);
 	else
 		convertYUVA420ToRGBA<uint32>((byte *)dst->getPixels(), dst->pitch, lookup, _colorTab, ySrc, uSrc, vSrc, aSrc, yWidth, yHeight, yPitch, uvPitch);
+}
+
+void YUVAToRGBAManager::convert420f(Graphics::Surface *dst, YUVAToRGBAManager::LuminanceScale scale, const byte *ySrc, const byte *uSrc, const byte *vSrc, const byte *aSrc, int yWidth, int yHeight, int yPitch, int uvPitch) {
+	// Sanity checks
+	assert(dst && dst->getPixels());
+	assert(dst->format.bytesPerPixel == 2 || dst->format.bytesPerPixel == 4);
+	assert(ySrc && uSrc && vSrc);
+	assert((yWidth & 1) == 0);
+	assert((yHeight & 1) == 0);
+
+	const YUVAToRGBALookup *lookup = getLookup(dst->format, scale);
+
+	// Use a templated function to avoid an if check on every pixel
+	if (dst->format.bytesPerPixel == 2)
+		convertYUVA420ToRGBAf<uint16>((byte *)dst->getPixels(), dst->pitch, lookup, _colorTab, ySrc, uSrc, vSrc, aSrc, yWidth, yHeight, yPitch, uvPitch);
+	else
+		convertYUVA420ToRGBAf<uint32>((byte *)dst->getPixels(), dst->pitch, lookup, _colorTab, ySrc, uSrc, vSrc, aSrc, yWidth, yHeight, yPitch, uvPitch);
 }
 
 } // End of namespace Graphics

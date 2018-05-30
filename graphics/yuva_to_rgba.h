@@ -62,7 +62,7 @@ public:
 	 * @param uvPitch the pitch of the u and v surfaces
 	 */
 	void convert420(Graphics::Surface *dst, LuminanceScale scale, const byte *ySrc, const byte *uSrc, const byte *vSrc, const byte *aSrc, int yWidth, int yHeight, int yPitch, int uvPitch);
-
+	void convert420f(Graphics::Surface *dst, LuminanceScale scale, const byte *ySrc, const byte *uSrc, const byte *vSrc, const byte *aSrc, int yWidth, int yHeight, int yPitch, int uvPitch);
 private:
 	friend class Common::Singleton<SingletonBaseType>;
 	YUVAToRGBAManager();

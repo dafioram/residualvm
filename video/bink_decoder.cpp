@@ -28,6 +28,7 @@
 #include "audio/decoders/raw.h"
 
 #include "common/util.h"
+#include "common/config-manager.h"
 #include "common/textconsole.h"
 #include "common/math.h"
 #include "common/stream.h"
@@ -486,8 +487,14 @@ void BinkDecoder::BinkVideoTrack::decodePacket(VideoFrame &frame) {
 	// to allow for odd-sized videos.
 	// ResidualVM: added support for Alpha version: YUVAToRGBAMan, _curPlanes[3]
 	assert(_curPlanes[0] && _curPlanes[1] && _curPlanes[2] && _curPlanes[3]);
+	if (ConfMan.getBool("bink_blurry")) {
+	YUVAToRGBAMan.convert420f(&_surface, Graphics::YUVAToRGBAManager::kScaleITU, _curPlanes[0], _curPlanes[1], _curPlanes[2], _curPlanes[3],
+			_surfaceWidth, _surfaceHeight, _yBlockWidth * 8, _uvBlockWidth * 8);
+	}
+	else {
 	YUVAToRGBAMan.convert420(&_surface, Graphics::YUVAToRGBAManager::kScaleITU, _curPlanes[0], _curPlanes[1], _curPlanes[2], _curPlanes[3],
 			_surfaceWidth, _surfaceHeight, _yBlockWidth * 8, _uvBlockWidth * 8);
+	}
 
 	// And swap the planes with the reference planes
 	for (int i = 0; i < 4; i++)

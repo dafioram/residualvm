@@ -185,6 +185,7 @@ static const Myst3GameDescription gameDescriptions[] = {
 };
 
 #define GAMEOPTION_WIDESCREEN_MOD GUIO_GAMEOPTIONS1
+#define GAMEOPTION_BINK_BLURRY GUIO_GAMEOPTIONS2
 
 static const ADExtraGuiOptionsMap optionsList[] = {
 	{
@@ -196,7 +197,15 @@ static const ADExtraGuiOptionsMap optionsList[] = {
 			false
 		}
 	},
-
+	{
+		GAMEOPTION_BINK_BLURRY,
+		{
+			_s("Blurry Bink"),
+			_s("Enable a faster, but less quality Bink Videos."),
+			"bink_blurry",
+			false
+		}
+	},
 	AD_EXTRA_GUI_OPTIONS_TERMINATOR
 };
 
@@ -204,7 +213,7 @@ class Myst3MetaEngine : public AdvancedMetaEngine {
 public:
 	Myst3MetaEngine() : AdvancedMetaEngine(gameDescriptions, sizeof(Myst3GameDescription), myst3Games, optionsList) {
 		_singleId = "myst3";
-		_guiOptions = GUIO5(GUIO_NOMIDI, GUIO_NOSFX, GUIO_NOSPEECH, GUIO_NOSUBTITLES, GAMEOPTION_WIDESCREEN_MOD);
+		_guiOptions = GUIO6(GUIO_NOMIDI, GUIO_NOSFX, GUIO_NOSPEECH, GUIO_NOSUBTITLES, GAMEOPTION_WIDESCREEN_MOD, GAMEOPTION_BINK_BLURRY);
 		_maxScanDepth = 3;
 		_directoryGlobs = directoryGlobs;
 	}
